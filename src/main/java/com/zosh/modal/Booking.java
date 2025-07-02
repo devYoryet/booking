@@ -17,12 +17,11 @@ import java.util.Set;
 public class Booking {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "bookings_seq_gen")
+    @SequenceGenerator(name = "bookings_seq_gen", sequenceName = "bookings_seq", allocationSize = 1)
     private Long id;
 
-
     private Long salonId;
-
 
     private Long customerId;
 
@@ -33,13 +32,13 @@ public class Booking {
     private LocalDateTime endTime;
 
     @ElementCollection
+    @CollectionTable(name = "booking_service_ids", joinColumns = @JoinColumn(name = "booking_id"))
+    @Column(name = "service_id")
     private Set<Long> serviceIds;
 
+    @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private BookingStatus status;
 
     private int totalPrice;
-
-
-
 }
