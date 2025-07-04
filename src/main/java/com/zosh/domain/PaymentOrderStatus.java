@@ -1,5 +1,9 @@
 package com.zosh.domain;
 
 public enum PaymentOrderStatus {
-    PENDING,SUCCESS,FAILED
+    PENDING,
+    PAID,
+    FAILED,
+    CANCELLED,
+    REFUNDED
 }

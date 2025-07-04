@@ -14,34 +14,37 @@ public class OracleSequenceGenerator {
         this.jdbcTemplate = new JdbcTemplate(dataSource);
     }
 
-    public void createSequenceIfNotExists(String sequenceName, String tableName) {
-        try {
-            // Verificar si la secuencia existe
-            String checkQuery = "SELECT COUNT(*) FROM USER_SEQUENCES WHERE SEQUENCE_NAME = ?";
-            Integer count = jdbcTemplate.queryForObject(checkQuery, Integer.class, sequenceName.toUpperCase());
+    public Long getNextSequenceValue(String sequenceName) {
+        String sql = "SELECT " + sequenceName + ".NEXTVAL FROM DUAL";
+        return jdbcTemplate.queryForObject(sql, Long.class);
+    }
 
-            if (count == 0) {
-                // Crear secuencia
-                String createSeq = String.format(
-                        "CREATE SEQUENCE %s START WITH 1 INCREMENT BY 1 NOCACHE NOCYCLE",
-                        sequenceName);
-                jdbcTemplate.execute(createSeq);
+    // Métodos específicos para cada secuencia
+    public Long getNextBookingId() {
+        return getNextSequenceValue("bookings_seq");
+    }
 
-                // Obtener el máximo ID actual de la tabla si existe
-                try {
-                    String maxIdQuery = String.format("SELECT NVL(MAX(id), 0) + 1 FROM %s", tableName);
-                    Long maxId = jdbcTemplate.queryForObject(maxIdQuery, Long.class);
+    public Long getNextUserId() {
+        return getNextSequenceValue("users_seq");
+    }
 
-                    if (maxId > 1) {
-                        String alterSeq = String.format("ALTER SEQUENCE %s RESTART START WITH %d", sequenceName, maxId);
-                        jdbcTemplate.execute(alterSeq);
-                    }
-                } catch (Exception e) {
-                    // Tabla no existe aún, usar valor por defecto
-                }
-            }
-        } catch (Exception e) {
-            throw new RuntimeException("Error creando secuencia Oracle: " + sequenceName, e);
-        }
+    public Long getNextSalonId() {
+        return getNextSequenceValue("salons_seq");
+    }
+
+    public Long getNextCategoryId() {
+        return getNextSequenceValue("categories_seq");
+    }
+
+    public Long getNextServiceId() {
+        return getNextSequenceValue("service_offerings_seq");
+    }
+
+    public Long getNextNotificationId() {
+        return getNextSequenceValue("notifications_seq");
+    }
+
+    public Long getNextPaymentOrderId() {
+        return getNextSequenceValue("payment_orders_seq");
     }
 }
