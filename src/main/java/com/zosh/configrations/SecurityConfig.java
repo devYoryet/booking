@@ -1,3 +1,7 @@
+// ============================================================================
+// PARA TODOS LOS MICROSERVICIOS (User 8081, Salon 8082, Booking 8083, Category 8084)
+// SecurityConfig.java UNIFICADO - UNA SOLA CONFIGURACIÓN CORS
+// ============================================================================
 package com.zosh.configrations;
 
 import org.springframework.context.annotation.Bean;
@@ -11,6 +15,7 @@ import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+
 import java.util.Arrays;
 
 @Configuration
@@ -18,16 +23,22 @@ import java.util.Arrays;
 public class SecurityConfig {
 
     @Bean
-    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-                .cors().configurationSource(corsConfigurationSource())
-                .and()
-                .csrf().disable()
-                .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS)
-                .and()
-                .authorizeHttpRequests(authz -> authz
-                        .requestMatchers("/api/bookings/**", "/actuator/**").permitAll() // Temporalmente permitir todos
-                                                                                         // los endpoints
+                .csrf(csrf -> csrf.disable())
+                .cors(cors -> cors.configurationSource(corsConfigurationSource()))
+                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .authorizeHttpRequests(auth -> auth
+                        // ENDPOINTS PÚBLICOS
+                        .requestMatchers("/auth/**").permitAll()
+                        .requestMatchers("/test/**").permitAll()
+                        .requestMatchers("/actuator/**").permitAll()
+                        .requestMatchers("/health").permitAll()
+                        .requestMatchers("/error").permitAll()
+                        // Microservicio específico endpoints públicos
+                        .requestMatchers("/api/categories").permitAll() // Categorías públicas
+                        .requestMatchers("/api/salons").permitAll() // Salones públicos para búsqueda
+                        // Todo lo demás requiere autenticación
                         .anyRequest().authenticated());
 
         return http.build();
@@ -42,9 +53,10 @@ public class SecurityConfig {
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
 
-        // Configuración CORS más permisiva para desarrollo
+        // 🚨 CONFIGURACIÓN CORS SIMPLE Y CLARA
         configuration.setAllowedOriginPatterns(Arrays.asList("*"));
-        configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
+        configuration.setAllowedMethods(Arrays.asList(
+                "GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
         configuration.setAllowedHeaders(Arrays.asList("*"));
         configuration.setAllowCredentials(true);
         configuration.setExposedHeaders(Arrays.asList("Authorization"));
@@ -54,3 +66,17 @@ public class SecurityConfig {
         return source;
     }
 }
+
+// ============================================================================
+// 🚨 IMPORTANTE: ELIMINAR CUALQUIER OTRO ARCHIVO CorsConfig.java EN
+// MICROSERVICIOS
+// ============================================================================
+
+/*
+ * SI TIENES ARCHIVOS CorsConfig.java SEPARADOS EN LOS MICROSERVICIOS,
+ * ELIMÍNALOS:
+ * - src/main/java/com/zosh/configrations/CorsConfig.java ← ELIMINAR
+ * - o cualquier otro CorsConfig.java ← ELIMINAR
+ * 
+ * SOLO debe existir la configuración CORS en este SecurityConfig.java
+ */
